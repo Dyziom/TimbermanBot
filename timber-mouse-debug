@@ -1,0 +1,87 @@
+import os
+import pyautogui
+import time
+import pydirectinput
+
+LEFT_CLICK_POS = (960, 700)   # Miejsce, gdzie klikamy po lewej stronie drzewa
+RIGHT_CLICK_POS = (961, 700) # Miejsce, gdzie klikamy po prawej stronie drzewa
+
+class TimberBot:
+
+    def __init__(self):
+        self.screenshot_counter = 0
+        self.ensure_screenshot_folder()
+
+    def ensure_screenshot_folder(self):
+        os.makedirs("scriny", exist_ok=True)
+
+    def make_screenshot(self):
+        filename = f"scriny/{self.screenshot_counter}.png"
+        self.screenshot_counter += 1
+        return pyautogui.screenshot(filename, region=(780, 550, 300, 2))
+
+    def check_branch(self):
+        rgb_left=pyautogui.pixel(780,550)
+        rgb_right=pyautogui.pixel(1080,550)
+        rgb_srodek = pyautogui.pixel(989, 681)
+        if rgb_srodek[1] < 100:
+            return "Srodek"
+        elif abs(rgb_left[0]-74)<4: #rgb_left[2]==24:
+            #print(self.screenshot_counter,"lewo", rgb_left)
+            return "Left"
+        elif abs(rgb_right[0]-33)<4: #and rgb_right[2]==8:
+            #print(self.screenshot_counter,"prawo",rgb_right)
+            return "Right"
+        else:
+            #print(self.screenshot_counter,"none", rgb_right, rgb_left)
+            return "None"
+
+    def run(self):
+        last_pressed_left=True
+        while True:
+            side=self.check_branch()
+            immg = self.make_screenshot()
+            #time.sleep(0.2)
+            rgb_srodek = pyautogui.pixel(989, 681)
+            print(rgb_srodek[1])
+            if side=="Srodek":
+                pydirectinput.press('d')
+                pydirectinput.press('f')
+            elif side=="Left":
+                #pyautogui.moveTo(RIGHT_CLICK_POS)
+                #pyautogui.click(RIGHT_CLICK_POS)
+                #pyautogui.click(RIGHT_CLICK_POS)
+                pydirectinput.press('f')
+                pydirectinput.press('f')
+                if rgb_srodek[1] < 100:
+                    pyautogui.moveTo(LEFT_CLICK_POS)
+                    pyautogui.click(LEFT_CLICK_POS)
+                last_pressed_left=False
+            elif side=="Right":
+                pyautogui.moveTo(LEFT_CLICK_POS)
+                pyautogui.click(LEFT_CLICK_POS)
+                pyautogui.click(LEFT_CLICK_POS)
+                if rgb_srodek[1] < 100:
+                    pyautogui.moveTo(RIGHT_CLICK_POS)
+                    pyautogui.click(RIGHT_CLICK_POS)
+                last_pressed_left=True
+            else:
+                if last_pressed_left:
+                    pyautogui.moveTo(LEFT_CLICK_POS)
+                    pyautogui.click(LEFT_CLICK_POS)
+                    if rgb_srodek[1] < 100:
+                        pyautogui.moveTo(RIGHT_CLICK_POS)
+                        pyautogui.click(RIGHT_CLICK_POS)
+                else:
+                    pyautogui.moveTo(RIGHT_CLICK_POS)
+                    pyautogui.click(RIGHT_CLICK_POS)
+                    if rgb_srodek[1] < 100:
+                        pyautogui.moveTo(LEFT_CLICK_POS)
+                        pyautogui.click(LEFT_CLICK_POS)
+            #time.sleep(0.2)
+
+if __name__=='__main__':
+    print("Start za 2 sekundy...")
+    time.sleep(2)
+    timberBot=TimberBot()
+    timberBot.run()
